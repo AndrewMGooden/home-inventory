@@ -11,7 +11,7 @@
 
 // Where the app page lives, and the Google sign-in client it uses (see README.md).
 const APP_URL = 'https://andrewmgooden.github.io/home-inventory/';
-const GOOGLE_CLIENT_ID = '';
+const GOOGLE_CLIENT_ID = '820879358248-q71o9tp8cgov7cqr9jm7r0qbmg7sa13c.apps.googleusercontent.com';
 
 const SCHEMA = {
   items: {
