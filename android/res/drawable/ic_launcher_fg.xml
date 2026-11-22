@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A white house with a door, centered in the adaptive-icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,31 L28,53 L35,53 L35,77 L73,77 L73,53 L80,53 Z" />
+    <path
+        android:fillColor="#2E6A4C"
+        android:pathData="M48,77 L48,62 Q48,59 51,59 L57,59 Q60,59 60,62 L60,77 Z" />
+    <path
+        android:fillColor="#F0A46C"
+        android:pathData="M64,36 L70,36 L70,46 L64,41 Z" />
+</vector>

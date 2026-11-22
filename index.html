@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Home Inventory</title>
+<meta name="theme-color" content="#2e6a4c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root {
+  --bg: #f4f5f1; --surface: #ffffff; --surface-2: #eceee8; --text: #1c221e; --muted: #66706a; --line: #dfe3dc;
+  --accent: #2e6a4c; --on-accent: #ffffff; --accent-soft: #cfe3d7;
+  --warn: #b4501a; --warn-soft: #fbece2; --danger: #b42318;
+  --shadow: 0 1px 2px rgba(20,30,25,.06), 0 4px 14px rgba(20,30,25,.05);
+  --ph-l: 90%; --ph-t: 32%;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111412; --surface: #1a1f1c; --surface-2: #252b27; --text: #e6ebe7; --muted: #9aa49e; --line: #2c3430;
+    --accent: #7cc59f; --on-accent: #0d1a12; --accent-soft: #2b4a39;
+    --warn: #f0a46c; --warn-soft: #3a261a; --danger: #f28b82;
+    --shadow: none; --ph-l: 24%; --ph-t: 80%;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+
+header.top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; gap: 4px; height: 56px; }
+header.top h1 { font-size: 19px; margin: 0; flex: 1; font-weight: 700; letter-spacing: -.01em; }
+.icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 0; background: transparent; display: grid; place-items: center; color: var(--muted); flex: none; }
+.icon-btn:hover { background: var(--surface-2); }
+.spin svg { animation: spin .9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.demo { background: var(--warn-soft); color: var(--warn); font-size: 13px; padding: 8px 16px; text-align: center; }
+
+.search { position: relative; margin: 14px 0 10px; }
+#q { padding-left: 42px; background: var(--surface); }
+.search svg { position: absolute; left: 12px; top: 11px; color: var(--muted); }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 4px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; font-size: 14px; }
+.chip.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.chip.warn:not(.on) { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+
+.group-h { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 20px 4px 8px; font-weight: 650; display: flex; justify-content: space-between; gap: 8px; }
+.group-h span { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.list { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.row { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 14px; padding: 10px; box-shadow: var(--shadow); border: 1px solid transparent; min-width: 0; }
+.row.tap { cursor: pointer; }
+.row.low { border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.thumb { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex: none; background: var(--surface-2); display: block; }
+.thumb.sm { width: 40px; height: 40px; border-radius: 8px; font-size: 16px !important; }
+.thumb.ph { display: grid; place-items: center; font-weight: 700; font-size: 22px; color: hsl(var(--h) 45% var(--ph-t)); background: hsl(var(--h) 45% var(--ph-l)); }
+.grow { flex: 1; min-width: 0; }
+.name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lowtag { color: var(--warn); font-weight: 600; }
+.stepper { display: flex; align-items: center; gap: 2px; flex: none; }
+.stepper button { width: 38px; height: 38px; border-radius: 10px; border: 0; background: var(--surface-2); font-size: 20px; line-height: 1; display: grid; place-items: center; }
+.stepper button:active { background: var(--accent-soft); }
+.stepper .q { min-width: 40px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.stepper .q small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); max-width: 52px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.check { width: 40px; height: 40px; border-radius: 12px; border: 2px solid var(--accent); background: none; color: var(--accent); display: grid; place-items: center; flex: none; }
+.check:active { background: var(--accent); color: var(--on-accent); }
+.price { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.fab { position: fixed; right: max(20px, calc(50vw - 470px)); bottom: calc(88px + env(safe-area-inset-bottom)); width: 58px; height: 58px; border-radius: 18px; border: 0; background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 18px rgba(0,0,0,.2); display: grid; place-items: center; z-index: 6; }
+.fab svg { width: 28px; height: 28px; }
+
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: center; padding-bottom: env(safe-area-inset-bottom); z-index: 7; }
+nav.tabs button { flex: 1; max-width: 200px; height: 64px; border: 0; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; color: var(--muted); position: relative; }
+nav.tabs button.on { color: var(--accent); font-weight: 650; }
+nav.tabs svg { width: 24px; height: 24px; }
+.count { position: absolute; top: 7px; left: calc(50% + 6px); min-width: 19px; height: 19px; border-radius: 10px; background: var(--warn); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0 5px; }
+
+.empty { text-align: center; color: var(--muted); padding: 56px 16px; }
+.empty b { display: block; color: var(--text); font-size: 17px; margin-bottom: 6px; }
+.empty .btn { margin-top: 16px; }
+
+.btn { height: 44px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn.danger { color: var(--danger); }
+.btn.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn.sm { height: 36px; padding: 0 12px; font-size: 14px; }
+.btn:disabled { opacity: .6; }
+.bar { display: flex; gap: 8px; align-items: center; margin: 14px 0 4px; }
+#add-name { flex: 1; background: var(--surface); }
+
+input:not([type=checkbox]), textarea, select { width: 100%; min-width: 0; height: 44px; border: 1px solid var(--line); border-radius: 11px; background: var(--bg); padding: 0 12px; font-size: 16px; outline: none; }
+textarea { height: auto; padding: 10px 12px; resize: vertical; }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 500; min-width: 0; }
+label.inline { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text); }
+label.inline input { width: 20px; height: 20px; accent-color: var(--accent); }
+output { height: 44px; display: flex; align-items: center; font-weight: 700; color: var(--text); font-size: 16px; font-variant-numeric: tabular-nums; }
+
+dialog { border: 0; padding: 0; background: var(--surface); color: var(--text); border-radius: 20px; width: min(520px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+dialog::backdrop { background: rgba(10,15,12,.5); }
+@media (max-width: 600px) {
+  dialog { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 20px 20px 0 0; max-height: 94dvh; }
+}
+dialog form { padding: 8px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 12px; }
+.dlg-h { display: flex; align-items: center; gap: 8px; margin: 0 -8px; }
+.dlg-h h2 { margin: 0; font-size: 18px; flex: 1; padding-left: 8px; }
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+.actions .sp { flex: 1; }
+.hint { margin: -4px 0 0; font-size: 13px; color: var(--muted); }
+.photo-pick { height: 190px; border-radius: 14px; border: 1.5px dashed var(--line); background: var(--bg); display: grid; place-items: center; overflow: hidden; position: relative; color: var(--muted); width: 100%; padding: 0; }
+.photo-pick .ph-empty { display: grid; justify-items: center; gap: 6px; font-weight: 600; font-size: 14px; }
+.photo-pick .ph-empty svg { width: 34px; height: 34px; }
+.photo-pick img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-pick .ph-change { position: absolute; right: 10px; bottom: 10px; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; padding: 5px 10px; border-radius: 999px; }
+.linkish { background: none; border: 0; color: var(--accent); padding: 2px 0; font-weight: 600; font-size: 14px; justify-self: start; }
+
+.card { background: var(--surface); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin-top: 12px; }
+.card h3 { margin: 0 0 4px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.month-nav { display: flex; align-items: center; gap: 4px; margin-top: 12px; }
+.month-nav strong { flex: 1; text-align: center; font-size: 16px; }
+.big { font-size: 36px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.meter { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; margin: 12px 0 6px; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: 5px; }
+.meter.over i { background: var(--warn); }
+.cat-bar { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin-top: 12px; font-size: 14px; }
+.cat-bar .track { grid-column: 1 / -1; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.cat-bar .track i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.months { display: flex; align-items: stretch; gap: 8px; height: 150px; margin-top: 10px; }
+.months button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; border: 0; background: none; padding: 0; font-size: 12px; color: var(--muted); min-width: 0; }
+.months .col { width: 100%; max-width: 46px; background: var(--accent-soft); border-radius: 6px 6px 3px 3px; min-height: 3px; }
+.months .cur .col { background: var(--accent); }
+.months .cur { color: var(--text); font-weight: 650; }
+.months .v { font-size: 11px; white-space: nowrap; }
+.muted { color: var(--muted); }
+.ok { color: var(--accent); font-weight: 600; }
+.amt { text-align: right; flex: none; display: grid; justify-items: end; gap: 4px; }
+.mini { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: 6px; }
+.mini i { display: block; height: 100%; background: var(--accent); }
+.mini.over i { background: var(--warn); }
+.row.overdue { border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
+.overdue-tag { color: var(--danger); font-weight: 600; }
+.chips.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.split { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); margin-top: 6px; }
+.split b { color: var(--text); font-weight: 600; }
+
+#toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); background: #1f2622; color: #fff; padding: 11px 16px; border-radius: 12px; font-size: 14px; opacity: 0; pointer-events: none; transition: .2s; z-index: 50; max-width: calc(100vw - 32px); box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast.err { background: var(--danger); }
+#boot { position: fixed; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 40; color: var(--muted); text-align: center; padding: 24px; }
+#signin { position: fixed; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 45; padding: 24px; text-align: center; }
+#signin .card-in { max-width: 340px; }
+#signin img { width: 84px; height: 84px; border-radius: 22px; box-shadow: var(--shadow); }
+#signin h2 { margin: 16px 0 6px; font-size: 22px; }
+#signin p { color: var(--muted); margin: 0; }
+#gbtn { display: flex; justify-content: center; min-height: 44px; margin: 22px 0 14px; }
+#boot .ring { width: 36px; height: 36px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; margin: 0 auto 14px; animation: spin .8s linear infinite; }
+</style>
+</head>
+<body>
+
+<div id="boot"><div><div class="ring"></div><div id="boot-msg">Loading your inventory…</div></div></div>
+
+<div id="signin" hidden>
+  <div class="card-in">
+    <img src="icons/icon-192.png" alt="">
+    <h2>Home Inventory</h2>
+    <p id="signin-msg"></p>
+    <div id="gbtn"></div>
+    <p style="font-size:13px">Only the Sheet's owner and people they add can get in.</p>
+  </div>
+</div>
+
+<header class="top">
+  <div class="demo" id="demo" hidden>Demo mode: sample data that stays in this browser and never touches your Sheet.</div>
+  <div class="wrap">
+    <h1 id="title">Home Inventory</h1>
+    <button class="icon-btn" id="sync" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+    <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="view-stock">
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search your house…" autocomplete="off">
+    </div>
+    <div class="chips" id="chips"></div>
+    <div id="stock-list"></div>
+  </section>
+
+  <section id="view-shop" hidden>
+    <form class="bar" id="f-add" autocomplete="off">
+      <input id="add-name" list="dl-items" placeholder="Add something to buy…" enterkeyhint="done">
+      <button class="btn primary" type="submit">Add</button>
+    </form>
+    <div id="shop-list"></div>
+    <div class="actions" style="margin-top:16px">
+      <button class="btn sm" id="btn-share" type="button"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/></svg>Share list</button>
+    </div>
+  </section>
+
+  <section id="view-bills" hidden></section>
+
+  <section id="view-spend" hidden></section>
+</main>
+
+<button class="fab" id="fab" aria-label="Add item"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<nav class="tabs">
+  <button data-tab="stock" class="on"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>At home</button>
+  <button data-tab="shop"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"/></svg>Shopping<span class="count" id="shop-count" hidden></span></button>
+  <button data-tab="bills"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>Bills<span class="count" id="bill-count" hidden></span></button>
+  <button data-tab="spend"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v2M11 10v7M15 12v5M19 6v11"/></svg>Spending</button>
+</nav>
+
+<!-- Add / edit item -->
+<dialog id="dlg-item">
+  <form id="f-item" autocomplete="off">
+    <div class="dlg-h"><h2 id="item-title">New item</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <button type="button" class="photo-pick" id="ph-pick">
+      <span class="ph-empty"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.5"/></svg>Add a photo</span>
+    </button>
+    <input type="file" id="ph-file" accept="image/*" hidden>
+    <button type="button" class="linkish" id="ph-remove" hidden>Remove photo</button>
+    <label>Name<input name="name" required placeholder="e.g. Olive oil"></label>
+    <div class="cols-2">
+      <label>Price<input name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <label>Store<input name="store" list="dl-store" placeholder="Where you buy it"></label>
+    </div>
+    <div class="cols-2">
+      <label>Category<input name="category" list="dl-cat" placeholder="Food"></label>
+      <label>Where it lives<input name="location" list="dl-loc" placeholder="Pantry"></label>
+    </div>
+    <div class="cols-3">
+      <label>How many<input name="qty" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Restock at<input name="min" type="number" min="0" step="any" inputmode="decimal" placeholder="never"></label>
+      <label>Unit<input name="unit" placeholder="bottles"></label>
+    </div>
+    <p class="hint">It goes on your shopping list when you have this many or fewer.</p>
+    <label>Notes<textarea name="notes" rows="2" placeholder="Brand, size, anything"></textarea></label>
+    <div class="actions">
+      <button type="button" class="btn danger sm" id="item-del">Delete</button>
+      <button type="button" class="btn sm" id="item-tolist">Add to list</button>
+      <span class="sp"></span>
+      <button type="submit" class="btn primary" id="item-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Bought it -->
+<dialog id="dlg-buy">
+  <form id="f-buy" autocomplete="off">
+    <div class="dlg-h"><h2>Bought it</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <label>What<input name="name" required list="dl-items"></label>
+    <div class="cols-3">
+      <label>How many<input name="qty" type="number" min="0" step="any" inputmode="decimal" value="1"></label>
+      <label>Price each<input name="price" type="number" min="0" step="0.01" inputmode="decimal"></label>
+      <label>Total<input name="total" type="number" min="0" step="0.01" inputmode="decimal"></label>
+    </div>
+    <div class="cols-2">
+      <label>Store<input name="store" list="dl-store"></label>
+      <label>Date<input name="date" type="date"></label>
+    </div>
+    <label>Category<input name="category" list="dl-cat"></label>
+    <label class="inline" id="buy-stock-row"><input type="checkbox" name="addToStock" checked><span id="buy-stock-text">Add to what I have at home</span></label>
+    <div class="actions"><span class="sp"></span><button type="submit" class="btn primary">Save purchase</button></div>
+  </form>
+</dialog>
+
+<!-- Add / edit bill -->
+<dialog id="dlg-bill">
+  <form id="f-bill" autocomplete="off">
+    <div class="dlg-h"><h2 id="bill-title">New bill</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <label>What is it<input name="name" required list="dl-bills" placeholder="e.g. Light (electricity)"></label>
+    <div class="cols-2">
+      <label><span id="bill-amt-label">Usual amount</span><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <label>Category<input name="category" list="dl-billcat" placeholder="Utilities"></label>
+    </div>
+    <div class="cols-2">
+      <label>Repeats<select name="repeat"></select></label>
+      <label id="bill-due-row">Next due<input name="due" type="date"></label>
+    </div>
+    <p class="hint" id="bill-hint"></p>
+    <label>Notes<textarea name="notes" rows="2" placeholder="How you pay, account details…"></textarea></label>
+    <div class="actions">
+      <button type="button" class="btn danger sm" id="bill-del">Delete</button>
+      <span class="sp"></span>
+      <button type="submit" class="btn primary" id="bill-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Pay a bill -->
+<dialog id="dlg-pay">
+  <form id="f-pay" autocomplete="off">
+    <div class="dlg-h"><h2 id="pay-title">Pay bill</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="cols-2">
+      <label>Amount<input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required></label>
+      <label>Date<input name="date" type="date"></label>
+    </div>
+    <label>Paid where / how<input name="store" list="dl-store" placeholder="e.g. online, bank, gas station"></label>
+    <div class="actions"><span class="sp"></span><button type="submit" class="btn primary">Save payment</button></div>
+  </form>
+</dialog>
+
+<!-- Settings -->
+<dialog id="dlg-settings">
+  <form id="f-settings" autocomplete="off">
+    <div class="dlg-h"><h2>Settings</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="cols-2">
+      <label>Monthly budget<input name="budget" type="number" min="0" step="1" inputmode="decimal" placeholder="none"></label>
+      <label>Currency<input name="currency" list="dl-cur" maxlength="3" placeholder="JMD"></label>
+    </div>
+    <a class="linkish" id="sheet-link" target="_blank" rel="noopener" hidden>Open the Google Sheet ↗</a>
+    <button type="button" class="linkish" id="demo-reset" hidden>Reset demo data</button>
+    <p class="hint" id="acct" hidden></p>
+    <button type="button" class="linkish" id="sign-out" hidden>Sign out on this device</button>
+    <div class="actions"><span class="sp"></span><button type="submit" class="btn primary">Save</button></div>
+  </form>
+</dialog>
+
+<datalist id="dl-cat"></datalist>
+<datalist id="dl-loc"></datalist>
+<datalist id="dl-store"></datalist>
+<datalist id="dl-items"></datalist>
+<datalist id="dl-bills"></datalist>
+<datalist id="dl-billcat"></datalist>
+<datalist id="dl-cur"><option value="JMD"><option value="USD"><option value="CAD"><option value="GBP"><option value="EUR"><option value="AUD"><option value="NZD"><option value="ZAR"><option value="NGN"><option value="KES"><option value="INR"><option value="PHP"><option value="MXN"></datalist>
+
+<div id="toast"></div>
+
+<script>
+// The Apps Script web app that reads and writes your Google Sheet, and the Google sign-in client.
+const API_URL = 'https://script.google.com/macros/s/AKfycbzspCiuOW4naWn9FoSe12v2aIjV-41pkKa0DbEYyse-tn_FfAR7OzYTk4qceyEWiRbLGA/exec';
+const GOOGLE_CLIENT_ID = '';
+// Add ?demo to the address to try the app with sample data (nothing is saved to the Sheet).
+const LIVE = !!API_URL && !/[?&]demo\b/.test(location.search);
+const CACHE_KEY = 'home-inventory-cache-v1';
+const DEFAULT_CATS = ['Food', 'Drinks', 'Cleaning', 'Toiletries', 'Household', 'Medicine', 'Pets', 'Baby'];
+const DEFAULT_LOCS = ['Kitchen', 'Pantry', 'Fridge', 'Freezer', 'Bathroom', 'Laundry', 'Garage'];
+const BILL_CATS = ['Utilities', 'Car', 'Housing', 'Phone & internet', 'Insurance', 'Subscriptions', 'Loans', 'School', 'Health', 'Transport', 'Eating out', 'Other'];
+const REPEATS = [['Monthly', 1], ['Every 2 months', 2], ['Every 3 months', 3], ['Every 4 months', 4], ['Every 6 months', 6], ['Yearly', 12], ['As needed', 0]];
+// Quick-add suggestions: [name, category, repeats]
+const COMMON_BILLS = [
+  ['Light (electricity)', 'Utilities', 'Monthly'], ['Water', 'Utilities', 'Monthly'], ['Cooking gas', 'Utilities', 'As needed'],
+  ['Internet & cable', 'Phone & internet', 'Monthly'], ['Phone', 'Phone & internet', 'Monthly'], ['Rent / mortgage', 'Housing', 'Monthly'],
+  ['Car gas', 'Car', 'As needed'], ['Car payment', 'Car', 'Monthly'], ['Car insurance', 'Car', 'Yearly'],
+  ['Car registration & fitness', 'Car', 'Yearly'], ['Car maintenance', 'Car', 'As needed'], ['Bus / taxi fare', 'Transport', 'As needed'],
+  ['Lunch money', 'Eating out', 'As needed'], ['Streaming', 'Subscriptions', 'Monthly'], ['School fees', 'School', 'Every 4 months'],
+  ['Health insurance', 'Insurance', 'Monthly'], ['Loan payment', 'Loans', 'Monthly'], ['Savings', 'Other', 'Monthly'],
+];
+const ICON = {
+  check: '<svg viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></svg>',
+  x: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  left: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+  right: '<svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+};
+
+/* ---------- small helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const blank = v => v === '' || v === null || v === undefined;
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const pad = n => String(n).padStart(2, '0');
+const byName = (a, b) => String(a.name).localeCompare(String(b.name));
+const isLow = it => !blank(it.min) && num(it.qty) <= num(it.min);
+const fmtQty = q => { const n = num(q); return Number.isInteger(n) ? String(n) : String(+n.toFixed(2)); };
+const pTotal = p => blank(p.total) ? num(p.qty || 1) * num(p.price) : num(p.total);
+const isoDay = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const monthKey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1);
+function shiftMonth(mk, n) { const [y, m] = mk.split('-').map(Number); return monthKey(new Date(y, m - 1 + n, 1)); }
+function monthLabel(mk, opts) { const [y, m] = mk.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString(undefined, opts || { month: 'long', year: 'numeric' }); }
+function parseDate(v) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || ''));
+  if (m) return new Date(+m[1], m[2] - 1, +m[3]);
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+function money(n) {
+  const currency = S.settings.currency || 'JMD';
+  // Jamaican dollars are written J$ so they can't be mistaken for US dollars.
+  if (currency === 'JMD') return (n < 0 ? '-' : '') + 'J$' + Math.abs(n || 0).toLocaleString('en-JM', { minimumFractionDigits: Number.isInteger(+(n || 0).toFixed(2)) ? 0 : 2, maximumFractionDigits: 2 });
+  try { return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(n || 0); }
+  catch (e) { return (n || 0).toFixed(2); }
+}
+function hue(s) { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; }
+const shortDate = d => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+
+/* ---------- bills: when is each one due? ---------- */
+const every = b => { const r = REPEATS.find(x => x[0] === b.repeat); return r ? r[1] : 1; };
+/** {date} if the bill is due in month mk (date may be null if no due day is set), else null. */
+function dueIn(b, mk) {
+  const n = every(b);
+  if (!n) return null;
+  const [y, m] = mk.split('-').map(Number), d = parseDate(b.due);
+  if (!d) return n === 1 ? { date: null } : null;
+  const diff = (y - d.getFullYear()) * 12 + (m - 1 - d.getMonth());
+  if (diff < 0 || diff % n) return null;
+  return { date: new Date(y, m - 1, Math.min(d.getDate(), new Date(y, m, 0).getDate())) };
+}
+function nextDueAfter(b, mk) {
+  for (let i = 1; i <= 24; i++) { const k = shiftMonth(mk, i), r = dueIn(b, k); if (r) return r.date || new Date(+k.slice(0, 4), +k.slice(5) - 1, 1); }
+  return null;
+}
+function billMonth(b, mk) {
+  const pays = S.purchases.filter(p => p.billId === b.id).map(p => ({ p, d: parseDate(p.date) }))
+    .filter(x => x.d && monthKey(x.d) === mk).sort((a, c) => c.d - a.d);
+  return { b, pays, paid: pays.reduce((t, x) => t + pTotal(x.p), 0), due: dueIn(b, mk), flexible: !every(b) };
+}
+/** Unpaid bills this month that are overdue or due within a week. */
+function billsNeedingAttention() {
+  const mk = monthKey(new Date()), soon = startOfToday().getTime() + 7 * 864e5;
+  return S.bills.map(b => billMonth(b, mk)).filter(r => !r.flexible && r.due && r.due.date && !r.paid && r.due.date.getTime() <= soon);
+}
+
+const findItemByName = name => S.items.find(i => String(i.name).trim().toLowerCase() === String(name).trim().toLowerCase());
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+
+let toastTimer;
+function toast(msg, err) {
+  const t = $('#toast');
+  t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = ''; }, err ? 4500 : 2600);
+}
+
+/* ---------- demo backend (used when not running inside Google Apps Script) ---------- */
+const Demo = (() => {
+  const KEY = 'home-inventory-demo-v1';
+  const uid = () => 'x' + Math.random().toString(36).slice(2, 12);
+  const day = off => { const d = new Date(); d.setDate(d.getDate() + off); return isoDay(d); };
+  function seed() {
+    const items = [
+      ['Milk', 'Food', 'Fridge', 1, 1, 'cartons', 3.49, 'Grocery'],
+      ['Eggs', 'Food', 'Fridge', 8, 6, '', 4.29, 'Grocery'],
+      ['Rice', 'Food', 'Pantry', 2, 1, 'bags', 6.99, ''],
+      ['Olive oil', 'Food', 'Pantry', 1, 1, 'bottles', 9.5, ''],
+      ['Coffee', 'Drinks', 'Pantry', 0, 1, 'bags', 11.99, ''],
+      ['Dish soap', 'Cleaning', 'Kitchen', 2, 1, '', 3.2, ''],
+      ['Laundry detergent', 'Cleaning', 'Laundry', 1, 1, '', 14.99, ''],
+      ['Paper towels', 'Household', 'Pantry', 4, 2, 'rolls', 1.5, ''],
+      ['Toilet paper', 'Toiletries', 'Bathroom', 12, 6, 'rolls', 0.75, ''],
+      ['Toothpaste', 'Toiletries', 'Bathroom', 2, 1, '', 3.99, ''],
+      ['AA batteries', 'Household', 'Garage', 6, 4, '', 0.9, ''],
+    ].map(([name, category, location, qty, min, unit, price, store]) =>
+      ({ id: uid(), name, category, location, qty, min, unit, price: Math.round(price * 155), store, notes: '', photoUrl: '', updated: '' }));
+    const purchases = [];
+    for (let i = 0; i < 30; i++) {
+      const it = items[(i * 7) % items.length], q = 1 + (i % 3);
+      purchases.push({ id: uid(), date: day(-i * 6 - 1), name: it.name, category: it.category, qty: q, price: it.price,
+        total: +(q * it.price).toFixed(2), store: ['Grocery', 'Market', 'Pharmacy'][i % 3], itemId: it.id });
+    }
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+    const bills = [
+      ['Light (electricity)', 'Utilities', 14500, 'Monthly', isoDay(new Date(y, m, 15))],
+      ['Water', 'Utilities', 5200, 'Monthly', isoDay(new Date(y, m, 26))],
+      ['Internet & cable', 'Phone & internet', 7900, 'Monthly', isoDay(new Date(y, m, 5))],
+      ['Phone', 'Phone & internet', 2500, 'Monthly', isoDay(new Date(y, m, 1))],
+      ['Car gas', 'Car', 24000, 'As needed', ''],
+      ['Car insurance', 'Car', 68000, 'Yearly', isoDay(new Date(y, m + 2, 10))],
+    ].map(([name, category, amount, repeat, due]) => ({ id: uid(), name, category, amount, repeat, due, notes: '' }));
+    const pay = (b, date, amount, store) => purchases.push({ id: uid(), date: isoDay(date), name: b.name, category: b.category,
+      qty: 1, price: amount, total: amount, store: store || '', itemId: '', billId: b.id });
+    for (let i = 5; i >= 0; i--) {
+      bills.slice(0, 4).forEach((b, j) => {
+        const d = new Date(y, m - i, parseDate(b.due).getDate());
+        if (i > 0 || d.getDate() < 10) pay(b, d, b.amount + (j === 0 ? (i % 3) * 1700 - 1500 : 0), 'Online');
+      });
+      [3, 12, 24].forEach(dd => { if (i > 0 || dd < now.getDate()) pay(bills[4], new Date(y, m - i, dd), 7500 + (dd % 5) * 300, 'Gas station'); });
+    }
+    return { items, purchases, bills, shopping: [{ id: uid(), name: 'Birthday candles', qty: 1, category: 'Household', itemId: '', added: day(0) }],
+      settings: { budget: 150000, currency: 'JMD' } };
+  }
+  let db = store.get(KEY) || seed();
+  db.bills = db.bills || [];
+  const save = () => { store.set(KEY, db); return { ...db, sheetUrl: '' }; };
+  const unlist = (pred) => { db.shopping = db.shopping.filter(s => !pred(s)); };
+  return {
+    getData: () => save(),
+    saveItem(item, photo) {
+      if (!String(item.name || '').trim()) throw new Error('Please give the item a name.');
+      let it = db.items.find(i => i.id === item.id);
+      if (!it) { it = { id: uid(), photoUrl: '' }; db.items.push(it); }
+      Object.assign(it, { name: item.name.trim(), category: item.category, location: item.location, qty: num(item.qty),
+        min: blank(item.min) ? '' : num(item.min), unit: item.unit, price: blank(item.price) ? '' : num(item.price),
+        store: item.store, notes: item.notes, updated: new Date().toISOString() });
+      if (photo) it.photoUrl = photo; else if (item.removePhoto) it.photoUrl = '';
+      return save();
+    },
+    setQty(id, qty) { const it = db.items.find(i => i.id === id); if (it) it.qty = num(qty); save(); return { id, qty }; },
+    deleteItem(id) { db.items = db.items.filter(i => i.id !== id); unlist(s => s.itemId === id); return save(); },
+    addToShopping(e) {
+      const ex = db.shopping.find(s => (e.itemId && s.itemId === e.itemId) || s.name.toLowerCase() === e.name.toLowerCase());
+      if (ex) Object.assign(ex, { qty: e.qty || 1 });
+      else db.shopping.push({ id: uid(), name: e.name, qty: e.qty || 1, category: e.category || '', itemId: e.itemId || '', added: day(0) });
+      return save();
+    },
+    removeFromShopping(id) { unlist(s => s.id === id); return save(); },
+    buy(p) {
+      const it = p.billId ? null : db.items.find(i => i.id === p.itemId) || db.items.find(i => i.name.toLowerCase() === p.name.toLowerCase());
+      const qty = num(p.qty) || 1, price = blank(p.price) ? '' : num(p.price);
+      db.purchases.push({ id: uid(), date: p.date || day(0), name: p.name, category: p.category || (it && it.category) || '', qty, price,
+        total: price === '' ? '' : +(qty * price).toFixed(2), store: p.store || '', itemId: it ? it.id : '', billId: p.billId || '' });
+      if (it) {
+        if (p.addToStock !== false) it.qty = num(it.qty) + qty;
+        if (price !== '') it.price = price;
+        if (p.store) it.store = p.store;
+      }
+      unlist(s => s.id === p.shoppingId || (it && s.itemId === it.id));
+      return save();
+    },
+    deletePurchase(id) { db.purchases = db.purchases.filter(p => p.id !== id); return save(); },
+    saveBill(b) {
+      if (!String(b.name || '').trim()) throw new Error('Please give the bill a name.');
+      let bill = db.bills.find(x => x.id === b.id);
+      if (!bill) { bill = { id: uid() }; db.bills.push(bill); }
+      Object.assign(bill, { name: b.name.trim(), category: b.category, amount: blank(b.amount) ? '' : num(b.amount), repeat: b.repeat,
+        due: b.repeat === 'As needed' ? '' : b.due, notes: b.notes });
+      return save();
+    },
+    deleteBill(id) { db.bills = db.bills.filter(b => b.id !== id); return save(); },
+    saveSettings(s) { Object.assign(db.settings, { budget: num(s.budget), currency: String(s.currency).toUpperCase() }); return save(); },
+    reset() { db = seed(); return save(); },
+  };
+})();
+
+/* ---------- talking to the backend ---------- */
+async function call(fn, ...args) {
+  if (!LIVE) {
+    await new Promise(r => setTimeout(r, 150));
+    return JSON.parse(JSON.stringify(Demo[fn](...args)));
+  }
+  const token = await signedIn();
+  let res, out;
+  try {
+    // text/plain keeps this a "simple" request, so Apps Script doesn't need to answer a CORS pre-check.
+    res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ token, fn, args }) });
+  } catch (e) { throw new Error("Can't reach your Google Sheet. Check your internet connection."); }
+  try { out = await res.json(); }
+  catch (e) { throw new Error('Your Google Sheet sent back something unexpected (' + res.status + '). Try again in a moment.'); }
+  if (!out.ok && out.auth) {
+    signOut(out.error, /not allowed|not accepted/.test(out.error));
+    return call(fn, ...args); // waits for a fresh sign-in, then tries again
+  }
+  if (!out.ok) throw new Error(out.error);
+  return out.data;
+}
+
+/* ---------- Google sign-in ---------- */
+let auth = store.get('hi-auth'); // { token, exp, email }
+let authMessage = '';
+const authWaiters = [];
+let gisLoaded;
+const gis = new Promise(r => { gisLoaded = r; });
+const tokenFresh = () => !!auth && auth.exp * 1000 > Date.now() + 120000;
+
+function signedIn() {
+  if (tokenFresh()) return Promise.resolve(auth.token);
+  return new Promise(resolve => { authWaiters.push(resolve); showSignIn(); });
+}
+function onGoogleCredential(resp) {
+  const part = resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const claims = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(part), c => c.charCodeAt(0))));
+  auth = { token: resp.credential, exp: claims.exp, email: claims.email };
+  store.set('hi-auth', auth);
+  authMessage = '';
+  $('#signin').hidden = true;
+  authWaiters.splice(0).forEach(resolve => resolve(auth.token));
+}
+async function showSignIn() {
+  $('#signin-msg').textContent = authMessage || 'Sign in with your Google account to open your inventory.';
+  $('#signin').hidden = false;
+  if (!GOOGLE_CLIENT_ID) { $('#signin-msg').textContent = "Google sign-in isn't set up yet (the app has no client ID)."; return; }
+  await gis;
+  google.accounts.id.renderButton($('#gbtn'), { theme: 'filled_blue', size: 'large', shape: 'pill', text: 'signin_with' });
+  google.accounts.id.prompt(); // One Tap: returning users get back in without clicking
+}
+function signOut(message, pickAnotherAccount) {
+  auth = null;
+  store.set('hi-auth', null);
+  authMessage = message || '';
+  if (pickAnotherAccount && window.google && google.accounts) google.accounts.id.disableAutoSelect();
+}
+if (LIVE) {
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.async = true;
+  s.onload = () => {
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, auto_select: true, use_fedcm_for_prompt: true });
+    gisLoaded();
+  };
+  s.onerror = () => { $('#signin-msg').textContent = "Couldn't load Google sign-in. Check your internet connection and reload."; };
+  document.head.appendChild(s);
+}
+let busy = 0;
+async function run(fn, ...args) {
+  busy++; $('#sync').classList.add('spin');
+  try { return await call(fn, ...args); }
+  catch (e) { toast((e && e.message) || 'Something went wrong — try again.', true); throw e; }
+  finally { if (--busy === 0) $('#sync').classList.remove('spin'); }
+}
+
+const S = {
+  items: [], shopping: [], purchases: [], bills: [], settings: { budget: 0, currency: 'JMD' }, sheetUrl: '',
+  tab: store.get('hi-tab') || 'stock', q: '', cat: 'All', month: monthKey(new Date()), loadedAt: 0,
+};
+const pendingQty = {}, qtyTimers = {};
+
+function apply(data, fromCache) {
+  if (!data || !data.items) return;
+  S.items = data.items; S.shopping = data.shopping || []; S.purchases = data.purchases || []; S.bills = data.bills || [];
+  S.settings = Object.assign({ budget: 0, currency: 'JMD' }, data.settings);
+  S.sheetUrl = data.sheetUrl || '';
+  S.items.forEach(it => { if (it.id in pendingQty) it.qty = pendingQty[it.id]; });
+  if (!fromCache) { S.loadedAt = Date.now(); if (LIVE) store.set(CACHE_KEY, data); }
+  render();
+}
+async function refresh() { apply(await run('getData')); }
+async function mutate(fn, ...args) { const data = await run(fn, ...args); apply(data); return data; }
+
+/* ---------- rendering ---------- */
+function render() {
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
+  ['stock', 'shop', 'bills', 'spend'].forEach(t => { $('#view-' + t).hidden = t !== S.tab; });
+  $('#fab').hidden = S.tab !== 'stock' && S.tab !== 'bills';
+  $('#fab').setAttribute('aria-label', S.tab === 'bills' ? 'Add bill' : 'Add item');
+  const n = shopCount(), nb = billsNeedingAttention().length;
+  $('#shop-count').textContent = n; $('#shop-count').hidden = !n;
+  $('#bill-count').textContent = nb; $('#bill-count').hidden = !nb;
+  if (S.tab === 'stock') renderStock();
+  else if (S.tab === 'shop') renderShop();
+  else if (S.tab === 'bills') renderBills();
+  else renderSpend();
+  renderDatalists();
+}
+
+function thumb(it, cls = '') {
+  const letter = (String(it.name || '?').trim()[0] || '?').toUpperCase();
+  const ph = `<div class="thumb ph ${cls}" style="--h:${hue(it.name)}">${esc(letter)}</div>`;
+  if (!it.photoUrl) return ph;
+  return `<img class="thumb ${cls}" src="${esc(it.photoUrl)}" alt="" loading="lazy" data-ph="${esc(ph)}" onerror="this.outerHTML=this.dataset.ph">`;
+}
+
+function chip(value, label, cls = '') {
+  return `<button class="chip ${cls} ${S.cat === value ? 'on' : ''}" data-act="cat" data-v="${esc(value)}">${esc(label)}</button>`;
+}
+
+function itemRow(it) {
+  const low = isLow(it), id = esc(it.id);
+  const sub = [];
+  if (!blank(it.price)) sub.push(esc(money(it.price)));
+  if (it.location) sub.push(esc(it.location));
+  if (low) sub.push(`<span class="lowtag">${num(it.qty) ? 'Running low' : 'Out'}</span>`);
+  return `<div class="row tap ${low ? 'low' : ''}" data-act="edit" data-id="${id}">
+    ${thumb(it)}
+    <div class="grow"><div class="name">${esc(it.name)}</div><div class="sub">${sub.join(' · ') || esc(it.category) || '&nbsp;'}</div></div>
+    <div class="stepper" data-act="none">
+      <button type="button" data-act="dec" data-id="${id}" aria-label="One less">−</button>
+      <div class="q">${fmtQty(it.qty)}${it.unit ? `<small>${esc(it.unit)}</small>` : ''}</div>
+      <button type="button" data-act="inc" data-id="${id}" aria-label="One more">+</button>
+    </div>
+  </div>`;
+}
+
+function renderStock() {
+  const cats = [...new Set(S.items.map(i => String(i.category || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const lowN = S.items.filter(isLow).length;
+  if (S.cat === 'Low' ? !lowN : (S.cat !== 'All' && !cats.includes(S.cat))) S.cat = 'All';
+  $('#chips').innerHTML = [chip('All', 'All'), lowN ? chip('Low', `Running low · ${lowN}`, 'warn') : '', ...cats.map(c => chip(c, c))].join('');
+  $('#chips').hidden = !S.items.length;
+
+  const box = $('#stock-list');
+  if (!S.items.length) {
+    box.innerHTML = `<div class="empty"><b>Nothing here yet</b>Add the things you keep at home — snap a photo so you know exactly what to buy.<br><button class="btn primary" data-act="new">${ICON.plus}Add your first item</button></div>`;
+    return;
+  }
+  const q = S.q.trim().toLowerCase();
+  const list = S.items.filter(it =>
+    (S.cat === 'All' || (S.cat === 'Low' ? isLow(it) : String(it.category).trim() === S.cat)) &&
+    (!q || [it.name, it.category, it.location, it.notes, it.store].join(' ').toLowerCase().includes(q))
+  ).sort(byName);
+  if (!list.length) { box.innerHTML = `<div class="empty"><b>Nothing matches</b>Try a different word, or tap + to add it.</div>`; return; }
+
+  if (S.cat === 'All' && !q) {
+    const groups = {};
+    list.forEach(it => { const g = String(it.category || '').trim() || 'Other'; (groups[g] = groups[g] || []).push(it); });
+    const names = Object.keys(groups).sort((a, b) => (a === 'Other') - (b === 'Other') || a.localeCompare(b));
+    box.innerHTML = names.map(g => `<div class="group-h">${esc(g)}<span>${groups[g].length}</span></div><div class="list">${groups[g].map(itemRow).join('')}</div>`).join('');
+  } else {
+    box.innerHTML = `<div class="list" style="margin-top:14px">${list.map(itemRow).join('')}</div>`;
+  }
+}
+
+function lowNotListed() {
+  const listed = new Set(S.shopping.map(s => s.itemId).filter(Boolean));
+  return S.items.filter(it => isLow(it) && !listed.has(it.id)).sort(byName);
+}
+function shopCount() { return S.shopping.length + lowNotListed().length; }
+
+function renderShop() {
+  const manual = S.shopping, low = lowNotListed();
+  const est = manual.reduce((t, s) => { const it = S.items.find(i => i.id === s.itemId); return t + (it ? num(it.price) * (num(s.qty) || 1) : 0); }, 0)
+    + low.reduce((t, it) => t + num(it.price), 0);
+  let html = '';
+  if (manual.length) {
+    html += `<div class="group-h">On your list<span>${manual.length}</span></div><div class="list">${manual.map(s => {
+      const it = S.items.find(i => i.id === s.itemId);
+      const sub = [num(s.qty) > 1 ? '× ' + fmtQty(s.qty) : '', it && it.price ? '~' + money(it.price) : '', s.category].filter(Boolean).map(esc).join(' · ');
+      return `<div class="row">
+        <button class="check" data-act="buy-shop" data-id="${esc(s.id)}" aria-label="Bought ${esc(s.name)}">${ICON.check}</button>
+        ${it ? thumb(it, 'sm') : ''}
+        <div class="grow"><div class="name">${esc(s.name)}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>
+        <button class="icon-btn" data-act="unlist" data-id="${esc(s.id)}" aria-label="Remove from list">${ICON.x}</button>
+      </div>`;
+    }).join('')}</div>`;
+  }
+  if (low.length) {
+    html += `<div class="group-h">Running low<span>${low.length}</span></div><div class="list">${low.map(it => `<div class="row">
+        <button class="check" data-act="buy-item" data-id="${esc(it.id)}" aria-label="Bought ${esc(it.name)}">${ICON.check}</button>
+        ${thumb(it, 'sm')}
+        <div class="grow"><div class="name">${esc(it.name)}</div>
+          <div class="sub">Have ${fmtQty(it.qty)}${it.location ? ' · ' + esc(it.location) : ''}${it.price ? ' · ~' + esc(money(it.price)) : ''}</div></div>
+      </div>`).join('')}</div>`;
+  }
+  if (!html) html = `<div class="empty"><b>Nothing to buy</b>Things land here on their own when you run low.<br>You can also add one-off items above.</div>`;
+  else if (est) html += `<p class="muted" style="margin:14px 4px 0;font-size:14px">Roughly ${esc(money(est))} based on usual prices.</p>`;
+  $('#shop-list').innerHTML = html;
+  $('#btn-share').hidden = !shopCount();
+}
+
+function monthNav(mk, max) {
+  return `<div class="month-nav">
+      <button class="icon-btn" data-act="month" data-v="-1" aria-label="Previous month">${ICON.left}</button>
+      <strong>${esc(monthLabel(mk))}</strong>
+      <button class="icon-btn" data-act="month" data-v="1" aria-label="Next month" ${mk >= max ? 'disabled style="opacity:.3"' : ''}>${ICON.right}</button>
+    </div>`;
+}
+
+function renderBills() {
+  const now = monthKey(new Date()), mk = S.month, today = startOfToday();
+  const rows = S.bills.map(b => billMonth(b, mk));
+  const dueTime = r => (r.due && r.due.date ? r.due.date.getTime() : 0);
+  const sched = rows.filter(r => !r.flexible && (r.due || r.paid)).sort((a, c) => (a.paid > 0) - (c.paid > 0) || dueTime(a) - dueTime(c));
+  const flex = rows.filter(r => r.flexible).sort((a, c) => a.b.name.localeCompare(c.b.name));
+  const later = rows.filter(r => !r.flexible && !r.due && !r.paid);
+  const paid = rows.reduce((t, r) => t + r.paid, 0);
+  const toPay = sched.reduce((t, r) => t + (r.paid ? 0 : num(r.b.amount)), 0) + flex.reduce((t, r) => t + Math.max(0, num(r.b.amount) - r.paid), 0);
+  const total = paid + toPay;
+
+  const have = new Set(S.bills.map(b => b.name.trim().toLowerCase()));
+  const quick = COMMON_BILLS.map((c, i) => [c, i]).filter(([c]) => !have.has(c[0].toLowerCase()));
+  const chips = `<div class="chips wrap">${quick.map(([c, i]) => `<button class="chip" data-act="quick-bill" data-v="${i}">+ ${esc(c[0])}</button>`).join('')}<button class="chip" data-act="new-bill">+ Something else</button></div>`;
+
+  let html = monthNav(mk, shiftMonth(now, 2));
+  if (!S.bills.length) {
+    $('#view-bills').innerHTML = html + `<div class="empty" style="padding:28px 8px 18px"><b>Keep track of your monthly bills</b>Light, water, car gas, phone and the rest. Add what you pay, tick it off each month, and see where the money goes. Tap one to start:</div>${chips}`;
+    return;
+  }
+
+  const late = r => !r.paid && r.due && r.due.date && (mk < now || (mk === now && r.due.date < today));
+  const status = r => {
+    if (r.paid) return `<span class="ok">Paid</span> · ${esc(shortDate(r.pays[0].d))}`;
+    const d = r.due.date;
+    if (!d) return 'Due this month';
+    if (late(r)) return `<span class="overdue-tag">${mk < now ? 'Not paid' : 'Overdue'}</span> · was due ${esc(shortDate(d))}`;
+    const days = Math.round((d - today) / 864e5);
+    if (mk === now && days <= 7) return `<span class="lowtag">${days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : `Due in ${days} days`}</span>`;
+    return `Due ${esc(shortDate(d))}`;
+  };
+  const schedRow = r => `<div class="row tap ${late(r) ? 'overdue' : ''}" data-act="edit-bill" data-id="${esc(r.b.id)}">
+      ${thumb({ name: r.b.name }, 'sm')}
+      <div class="grow"><div class="name">${esc(r.b.name)}</div><div class="sub">${status(r)}</div></div>
+      <div class="amt"><span class="price">${r.paid ? esc(money(r.paid)) : blank(r.b.amount) ? '' : '~' + esc(money(r.b.amount))}</span>
+        ${r.paid ? '' : `<button class="btn sm primary" data-act="pay" data-id="${esc(r.b.id)}">Pay</button>`}</div>
+    </div>`;
+  const flexRow = r => {
+    const amt = num(r.b.amount);
+    return `<div class="row tap" data-act="edit-bill" data-id="${esc(r.b.id)}">
+      ${thumb({ name: r.b.name }, 'sm')}
+      <div class="grow"><div class="name">${esc(r.b.name)}</div>
+        <div class="sub">${esc(money(r.paid))}${amt ? ' of ~' + esc(money(amt)) : ''} this month</div>
+        ${amt ? `<div class="mini ${r.paid > amt ? 'over' : ''}"><i style="width:${Math.min(100, r.paid / amt * 100)}%"></i></div>` : ''}</div>
+      <button class="btn sm" data-act="pay" data-id="${esc(r.b.id)}">${ICON.plus}Add</button>
+    </div>`;
+  };
+  const laterRow = r => {
+    const next = nextDueAfter(r.b, mk);
+    return `<div class="row tap" data-act="edit-bill" data-id="${esc(r.b.id)}">
+      ${thumb({ name: r.b.name }, 'sm')}
+      <div class="grow"><div class="name">${esc(r.b.name)}</div>
+        <div class="sub">${next ? 'Next due ' + esc(next.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })) : 'Set a due date'} · ${esc(r.b.repeat.toLowerCase())}</div></div>
+      <span class="price muted">${blank(r.b.amount) ? '' : '~' + esc(money(r.b.amount))}</span>
+    </div>`;
+  };
+
+  html += `<div class="card"><h3>Bills ${mk === now ? 'this month' : 'in ' + esc(monthLabel(mk, { month: 'long' }))}</h3>
+      <div class="big">${esc(money(total))}</div>
+      <div class="split"><span><b>${esc(money(paid))}</b> paid</span><span><b>${esc(money(toPay))}</b> still to pay</span></div>
+      ${total ? `<div class="meter"><i style="width:${paid / total * 100}%"></i></div>` : ''}
+    </div>`;
+  if (sched.length) html += `<div class="group-h">Due ${mk === now ? 'this month' : 'in ' + esc(monthLabel(mk, { month: 'long' }))}<span>${sched.filter(r => r.paid).length} of ${sched.length} paid</span></div><div class="list">${sched.map(schedRow).join('')}</div>`;
+  if (flex.length) html += `<div class="group-h">Pay as you go</div><div class="list">${flex.map(flexRow).join('')}</div>`;
+  if (later.length) html += `<div class="group-h">Not due this month</div><div class="list">${later.map(laterRow).join('')}</div>`;
+  html += `<div class="group-h">Add more</div>${chips}`;
+  $('#view-bills').innerHTML = html;
+}
+
+function renderSpend() {
+  const now = monthKey(new Date()), mk = S.month;
+  const totals = {}, inMonth = [];
+  S.purchases.forEach(p => {
+    const d = parseDate(p.date); if (!d) return;
+    const k = monthKey(d); totals[k] = (totals[k] || 0) + pTotal(p);
+    if (k === mk) inMonth.push({ p, d });
+  });
+  inMonth.sort((a, b) => b.d - a.d);
+  const total = totals[mk] || 0, prev = totals[shiftMonth(mk, -1)] || 0, budget = num(S.settings.budget);
+
+  const byCat = {};
+  inMonth.forEach(({ p }) => { const c = String(p.category || '').trim() || 'Other'; byCat[c] = (byCat[c] || 0) + pTotal(p); });
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const topCat = cats.length ? cats[0][1] : 0;
+
+  const months = [-5, -4, -3, -2, -1, 0].map(i => shiftMonth(mk, i));
+  const maxM = Math.max(1, ...months.map(m => totals[m] || 0));
+
+  let budgetHtml = '';
+  if (budget > 0) {
+    const pct = Math.min(100, total / budget * 100), left = budget - total;
+    budgetHtml = `<div class="meter ${left < 0 ? 'over' : ''}"><i style="width:${pct}%"></i></div>
+      <div class="muted" style="font-size:14px">${left >= 0 ? `${esc(money(left))} left of ${esc(money(budget))}` : `<span class="lowtag">${esc(money(-left))} over</span> your ${esc(money(budget))} budget`}</div>`;
+  }
+  const cmp = prev ? `${total >= prev ? '▲' : '▼'} ${esc(money(Math.abs(total - prev)))} vs ${esc(monthLabel(shiftMonth(mk, -1), { month: 'long' }))}` : '';
+
+  const billsSpent = inMonth.reduce((t, { p }) => t + (p.billId ? pTotal(p) : 0), 0);
+
+  $('#view-spend').innerHTML = `
+    ${monthNav(mk, now)}
+    <div class="card">
+      <h3>Spent</h3>
+      <div class="big">${esc(money(total))}</div>
+      ${cmp ? `<div class="muted" style="font-size:14px">${cmp}</div>` : ''}
+      ${billsSpent ? `<div class="split"><span>Bills <b>${esc(money(billsSpent))}</b></span><span>Shopping &amp; other <b>${esc(money(total - billsSpent))}</b></span></div>` : ''}
+      ${budgetHtml}
+    </div>
+    ${cats.length ? `<div class="card"><h3>By category</h3>${cats.map(([c, v]) => `<div class="cat-bar"><span>${esc(c)}</span><span class="price">${esc(money(v))}</span><div class="track"><i style="width:${v / topCat * 100}%"></i></div></div>`).join('')}</div>` : ''}
+    <div class="card"><h3>Last 6 months</h3>
+      <div class="months">${months.map(m => `<button data-act="pick-month" data-v="${m}" class="${m === mk ? 'cur' : ''}">
+        <span class="v">${totals[m] ? esc(money(totals[m]).replace(/\.\d+$/, '')) : ''}</span>
+        <span class="col" style="height:${(totals[m] || 0) / maxM * 100}px"></span>
+        <span>${esc(monthLabel(m, { month: 'short' }))}</span></button>`).join('')}</div>
+    </div>
+    <div class="group-h" style="align-items:center">Purchases<button class="btn sm" data-act="log">${ICON.plus}Log a purchase</button></div>
+    ${inMonth.length ? `<div class="list">${inMonth.map(({ p, d }) => `<div class="row">
+        <div class="grow"><div class="name">${esc(p.name)}</div>
+          <div class="sub">${esc(d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }))}${p.store ? ' · ' + esc(p.store) : ''}${num(p.qty) > 1 ? ' · ' + fmtQty(p.qty) + ' × ' + esc(money(p.price)) : ''}</div></div>
+        <span class="price">${esc(money(pTotal(p)))}</span>
+        <button class="icon-btn" data-act="del-purchase" data-id="${esc(p.id)}" aria-label="Delete purchase">${ICON.x}</button>
+      </div>`).join('')}</div>` : `<div class="empty" style="padding:32px 16px">No purchases this month.<br>Tick things off your shopping list and they show up here.</div>`}
+  `;
+}
+
+function renderDatalists() {
+  const opts = (vals) => [...new Set(vals.map(v => String(v || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)).map(v => `<option value="${esc(v)}">`).join('');
+  $('#dl-cat').innerHTML = opts([...DEFAULT_CATS, ...S.items.map(i => i.category), ...S.purchases.map(p => p.category)]);
+  $('#dl-billcat').innerHTML = opts([...BILL_CATS, ...S.bills.map(b => b.category)]);
+  $('#dl-bills').innerHTML = opts(COMMON_BILLS.map(c => c[0]));
+  $('#dl-loc').innerHTML = opts([...DEFAULT_LOCS, ...S.items.map(i => i.location)]);
+  $('#dl-store').innerHTML = opts([...S.items.map(i => i.store), ...S.purchases.map(p => p.store)]);
+  $('#dl-items').innerHTML = opts(S.items.map(i => i.name));
+}
+
+/* ---------- quantity +/- (saved after a short pause) ---------- */
+function bump(id, delta) {
+  const it = S.items.find(i => i.id === id); if (!it) return;
+  const wasLow = isLow(it);
+  it.qty = Math.max(0, num(it.qty) + delta);
+  pendingQty[id] = it.qty;
+  clearTimeout(qtyTimers[id]);
+  qtyTimers[id] = setTimeout(() => saveQty(id), 700);
+  if (!wasLow && isLow(it)) toast(`${it.name} is running low — it's on your shopping list`);
+  render();
+}
+function saveQty(id) {
+  delete qtyTimers[id];
+  const q = pendingQty[id];
+  run('setQty', id, q).catch(() => {}).finally(() => { if (pendingQty[id] === q) delete pendingQty[id]; });
+}
+function flushQty() { Object.keys(qtyTimers).forEach(id => { clearTimeout(qtyTimers[id]); saveQty(id); }); }
+
+/* ---------- two-tap confirm for destructive buttons ---------- */
+function armed(btn) {
+  if (btn.dataset.armed) return true;
+  btn.dataset.armed = '1'; btn.classList.add('armed');
+  const label = btn.innerHTML;
+  if (btn.classList.contains('btn')) btn.textContent = 'Tap again to delete';
+  setTimeout(() => { delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = label; }, 3000);
+  return false;
+}
+
+/* ---------- item editor ---------- */
+let edit = null;
+function openItem(id) {
+  const it = S.items.find(i => i.id === id) || null;
+  edit = { id: it ? it.id : '', photoData: null, removePhoto: false, photoUrl: it ? it.photoUrl : '' };
+  const f = $('#f-item').elements;
+  const presetCat = S.cat !== 'All' && S.cat !== 'Low' ? S.cat : '';
+  const v = it || { name: '', category: presetCat, location: '', qty: 1, min: 1, unit: '', price: '', store: '', notes: '' };
+  ['name', 'category', 'location', 'qty', 'min', 'unit', 'price', 'store', 'notes'].forEach(k => { f[k].value = blank(v[k]) ? '' : v[k]; });
+  $('#item-title').textContent = it ? 'Edit item' : 'New item';
+  $('#item-del').hidden = $('#item-tolist').hidden = !it;
+  showPhoto(edit.photoUrl);
+  $('#dlg-item').showModal();
+}
+function showPhoto(src) {
+  const pick = $('#ph-pick');
+  pick.querySelectorAll('img, .ph-change').forEach(n => n.remove());
+  if (src) pick.insertAdjacentHTML('beforeend', `<img src="${esc(src)}" alt=""><span class="ph-change">Change photo</span>`);
+  $('#ph-remove').hidden = !src;
+}
+function readPhoto(file, max = 900) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read that photo.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('That file is not a photo the app can read.'));
+      img.onload = () => {
+        const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+$('#ph-pick').addEventListener('click', () => $('#ph-file').click());
+$('#ph-file').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  try { edit.photoData = await readPhoto(file); edit.removePhoto = false; showPhoto(edit.photoData); }
+  catch (err) { toast(err.message, true); }
+});
+$('#ph-remove').addEventListener('click', () => { edit.photoData = null; edit.removePhoto = true; showPhoto(''); });
+
+$('#f-item').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements, btn = $('#item-save');
+  const item = { id: edit.id, removePhoto: edit.removePhoto };
+  ['name', 'category', 'location', 'qty', 'min', 'unit', 'price', 'store', 'notes'].forEach(k => { item[k] = f[k].value.trim(); });
+  if (edit.id && edit.id in pendingQty) { clearTimeout(qtyTimers[edit.id]); delete qtyTimers[edit.id]; delete pendingQty[edit.id]; }
+  btn.disabled = true; btn.textContent = edit.photoData ? 'Uploading photo…' : 'Saving…';
+  try {
+    await mutate('saveItem', item, edit.photoData);
+    $('#dlg-item').close();
+    toast(edit.id ? 'Saved' : `Added ${item.name}`);
+  } catch (err) { /* toast already shown */ }
+  finally { btn.disabled = false; btn.textContent = 'Save'; }
+});
+$('#item-del').addEventListener('click', async e => {
+  if (!armed(e.currentTarget)) return;
+  const id = edit.id, it = S.items.find(i => i.id === id);
+  $('#dlg-item').close();
+  S.items = S.items.filter(i => i.id !== id); render();
+  try { await mutate('deleteItem', id); toast(`Deleted ${it ? it.name : 'item'}`); } catch (err) { refresh().catch(() => {}); }
+});
+$('#item-tolist').addEventListener('click', async () => {
+  const it = S.items.find(i => i.id === edit.id); if (!it) return;
+  $('#dlg-item').close();
+  await addToList({ name: it.name, category: it.category, itemId: it.id });
+});
+
+/* ---------- shopping ---------- */
+async function addToList(entry) {
+  S.shopping = S.shopping.filter(s => !(entry.itemId && s.itemId === entry.itemId)).concat([{ id: 'tmp', qty: 1, ...entry }]);
+  render();
+  toast(`${entry.name} is on your list`);
+  try { await mutate('addToShopping', { qty: 1, ...entry }); } catch (err) { refresh().catch(() => {}); }
+}
+$('#f-add').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = $('#add-name'), name = input.value.trim();
+  if (!name) return;
+  input.value = '';
+  const it = findItemByName(name);
+  addToList(it ? { name: it.name, category: it.category, itemId: it.id } : { name, category: '', itemId: '' });
+});
+
+function listText() {
+  const lines = S.shopping.map(s => '☐ ' + s.name + (num(s.qty) > 1 ? ' ×' + fmtQty(s.qty) : ''))
+    .concat(lowNotListed().map(it => '☐ ' + it.name));
+  return 'Shopping list\n' + lines.join('\n');
+}
+$('#btn-share').addEventListener('click', async () => {
+  const text = listText();
+  try { if (navigator.share) { await navigator.share({ title: 'Shopping list', text }); return; } }
+  catch (e) { if (e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); toast('List copied — paste it into a text or note'); return; } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+  toast(ok ? 'List copied — paste it into a text or note' : 'Could not copy the list on this device', !ok);
+});
+
+/* ---------- bought it ---------- */
+let buyCtx = null;
+function openBuy({ shoppingId = '', itemId = '', name = '', qty = 1, category = '' } = {}) {
+  const it = S.items.find(i => i.id === itemId) || (name ? findItemByName(name) : null);
+  buyCtx = { shoppingId };
+  const f = $('#f-buy').elements;
+  f.name.value = it ? it.name : name;
+  f.qty.value = num(qty) || 1;
+  f.price.value = it && !blank(it.price) ? it.price : '';
+  f.store.value = it ? it.store || '' : '';
+  f.date.value = isoDay(new Date());
+  f.category.value = it ? it.category || '' : category || '';
+  f.addToStock.checked = true;
+  syncBuy('qty');
+  $('#dlg-buy').showModal();
+}
+function syncBuy(changed) {
+  const f = $('#f-buy').elements, qty = num(f.qty.value) || 1;
+  if (changed === 'total') f.price.value = f.total.value === '' ? '' : +(num(f.total.value) / qty).toFixed(4);
+  else f.total.value = f.price.value === '' ? '' : (num(f.price.value) * qty).toFixed(2);
+  const it = findItemByName(f.name.value);
+  $('#buy-stock-row').hidden = !it;
+  if (it) $('#buy-stock-text').textContent = `Add to what I have at home (${fmtQty(it.qty)} → ${fmtQty(num(it.qty) + qty)})`;
+}
+['qty', 'price', 'total', 'name'].forEach(n => $('#f-buy').elements[n].addEventListener('input', () => {
+  if (n === 'name') {
+    const it = findItemByName($('#f-buy').elements.name.value), f = $('#f-buy').elements;
+    if (it && !f.category.value) f.category.value = it.category || '';
+    if (it && f.price.value === '' && !blank(it.price)) f.price.value = it.price;
+  }
+  syncBuy(n);
+}));
+$('#f-buy').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements, it = findItemByName(f.name.value);
+  const p = {
+    shoppingId: buyCtx.shoppingId, itemId: it ? it.id : '', name: f.name.value.trim(), qty: num(f.qty.value) || 1,
+    price: f.price.value === '' ? '' : num(f.price.value), store: f.store.value.trim(), date: f.date.value,
+    category: f.category.value.trim(), addToStock: !!it && f.addToStock.checked,
+  };
+  if (!p.name) return;
+  $('#dlg-buy').close();
+  // Show the result right away; the sheet catches up in the background.
+  S.shopping = S.shopping.filter(s => s.id !== p.shoppingId && !(it && s.itemId === it.id));
+  if (it && p.addToStock) it.qty = num(it.qty) + p.qty;
+  S.purchases = S.purchases.concat([{ id: 'tmp', ...p, total: p.price === '' ? '' : p.qty * p.price }]);
+  render();
+  toast(p.price === '' ? `Logged ${p.name}` : `Logged ${p.name} · ${money(p.qty * p.price)}`);
+  try { await mutate('buy', p); } catch (err) { refresh().catch(() => {}); }
+});
+
+/* ---------- bills ---------- */
+const billForm = () => $('#f-bill').elements;
+billForm().repeat.innerHTML = REPEATS.map(([r]) => `<option>${r}</option>`).join('');
+let billEdit = null;
+function openBill(id, preset) {
+  const b = S.bills.find(x => x.id === id);
+  billEdit = { id: b ? b.id : '' };
+  const f = billForm();
+  const v = b || { name: preset ? preset[0] : '', category: preset ? preset[1] : '', repeat: preset ? preset[2] : 'Monthly', amount: '', due: '', notes: '' };
+  f.name.value = v.name; f.category.value = v.category || ''; f.amount.value = blank(v.amount) ? '' : v.amount;
+  f.repeat.value = REPEATS.some(r => r[0] === v.repeat) ? v.repeat : 'Monthly';
+  f.due.value = v.due || ''; f.notes.value = v.notes || '';
+  $('#bill-title').textContent = b ? 'Edit bill' : 'New bill';
+  $('#bill-del').hidden = !b;
+  syncBillForm();
+  $('#dlg-bill').showModal();
+}
+function syncBillForm() {
+  const flex = billForm().repeat.value === 'As needed';
+  $('#bill-due-row').hidden = flex;
+  $('#bill-amt-label').textContent = flex ? 'About how much a month' : 'Usual amount';
+  $('#bill-hint').textContent = flex
+    ? 'For things you pay a bit at a time, like car gas or bus fare. Add each time you spend and watch the month add up.'
+    : "It shows up each time it's due so you can tick it off. If the amount changes (like the light bill), just enter what you actually paid.";
+}
+billForm().repeat.addEventListener('change', syncBillForm);
+billForm().name.addEventListener('input', () => {
+  if (billEdit.id) return;
+  const f = billForm(), c = COMMON_BILLS.find(x => x[0].toLowerCase() === f.name.value.trim().toLowerCase());
+  if (c) { if (!f.category.value) f.category.value = c[1]; f.repeat.value = c[2]; syncBillForm(); }
+});
+$('#f-bill').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements, btn = $('#bill-save');
+  const bill = { id: billEdit.id, name: f.name.value.trim(), category: f.category.value.trim(), amount: f.amount.value,
+    repeat: f.repeat.value, due: f.due.value, notes: f.notes.value.trim() };
+  if (every(bill) > 1 && !bill.due) { toast('Pick the next due date so the app knows which months it\'s due', true); return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try { await mutate('saveBill', bill); $('#dlg-bill').close(); toast(billEdit.id ? 'Saved' : `Added ${bill.name}`); }
+  catch (err) { /* toast already shown */ }
+  finally { btn.disabled = false; btn.textContent = 'Save'; }
+});
+$('#bill-del').addEventListener('click', async e => {
+  if (!armed(e.currentTarget)) return;
+  const id = billEdit.id;
+  $('#dlg-bill').close();
+  S.bills = S.bills.filter(b => b.id !== id); render();
+  try { await mutate('deleteBill', id); toast('Bill deleted. Past payments stay in Spending.'); } catch (err) { refresh().catch(() => {}); }
+});
+
+let payBill = null;
+function openPay(id) {
+  const b = S.bills.find(x => x.id === id); if (!b) return;
+  payBill = b;
+  const f = $('#f-pay').elements, flex = !every(b), now = monthKey(new Date());
+  const last = S.purchases.filter(p => p.billId === id).map(p => ({ p, d: parseDate(p.date) })).filter(x => x.d).sort((a, c) => c.d - a.d)[0];
+  f.amount.value = flex ? '' : !blank(b.amount) ? b.amount : last ? pTotal(last.p) : '';
+  f.store.value = last ? last.p.store || '' : '';
+  const due = dueIn(b, S.month);
+  f.date.value = isoDay(S.month === now ? new Date() : (due && due.date) || new Date(+S.month.slice(0, 4), +S.month.slice(5) - 1, 15));
+  $('#pay-title').textContent = (flex ? 'Add to ' : 'Pay ') + b.name;
+  $('#dlg-pay').showModal();
+}
+$('#f-pay').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements, b = payBill;
+  const p = { billId: b.id, name: b.name, category: b.category || 'Bills', qty: 1, price: num(f.amount.value),
+    store: f.store.value.trim(), date: f.date.value || isoDay(new Date()), addToStock: false };
+  $('#dlg-pay').close();
+  S.purchases = S.purchases.concat([{ id: 'tmp', ...p, total: p.price }]);
+  render();
+  toast(`${every(b) ? 'Paid' : 'Added'} ${b.name} · ${money(p.price)}`);
+  try { await mutate('buy', p); } catch (err) { refresh().catch(() => {}); }
+});
+
+/* ---------- settings ---------- */
+$('#btn-settings').addEventListener('click', () => {
+  const f = $('#f-settings').elements;
+  f.budget.value = num(S.settings.budget) || '';
+  f.currency.value = S.settings.currency || 'JMD';
+  $('#sheet-link').hidden = !S.sheetUrl; $('#sheet-link').href = S.sheetUrl || '#';
+  $('#demo-reset').hidden = LIVE;
+  $('#acct').hidden = $('#sign-out').hidden = !(LIVE && auth);
+  if (LIVE && auth) $('#acct').textContent = 'Signed in as ' + auth.email;
+  $('#dlg-settings').showModal();
+});
+$('#sign-out').addEventListener('click', () => {
+  signOut('', true);
+  store.set(CACHE_KEY, null); // don't leave your data behind on this device
+  location.reload();
+});
+$('#f-settings').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target.elements, currency = (f.currency.value.trim() || 'JMD').toUpperCase();
+  try { new Intl.NumberFormat(undefined, { style: 'currency', currency }); }
+  catch (err) { toast(`"${currency}" isn't a currency code — try JMD, USD, GBP…`, true); return; }
+  $('#dlg-settings').close();
+  try { await mutate('saveSettings', { budget: num(f.budget.value), currency }); toast('Settings saved'); } catch (err) {}
+});
+$('#demo-reset').addEventListener('click', async () => { $('#dlg-settings').close(); await mutate('reset'); toast('Demo data reset'); });
+
+/* ---------- global wiring ---------- */
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
+  S.tab = b.dataset.tab; store.set('hi-tab', S.tab); render(); window.scrollTo(0, 0);
+}));
+$('#fab').addEventListener('click', () => (S.tab === 'bills' ? openBill('') : openItem('')));
+$('#sync').addEventListener('click', () => refresh().then(() => toast('Up to date')).catch(() => {}));
+$('#q').addEventListener('input', e => { S.q = e.target.value; renderStock(); });
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const { act, id, v } = el.dataset;
+  if (act === 'edit') openItem(id);
+  else if (act === 'new') openItem('');
+  else if (act === 'inc') bump(id, 1);
+  else if (act === 'dec') bump(id, -1);
+  else if (act === 'cat') { S.cat = v; renderStock(); }
+  else if (act === 'buy-shop') { const s = S.shopping.find(x => x.id === id); if (s) openBuy({ shoppingId: s.id, itemId: s.itemId, name: s.name, qty: s.qty, category: s.category }); }
+  else if (act === 'buy-item') openBuy({ itemId: id });
+  else if (act === 'unlist') {
+    const s = S.shopping.find(x => x.id === id);
+    S.shopping = S.shopping.filter(x => x.id !== id); render();
+    if (s && s.itemId) { const it = S.items.find(i => i.id === s.itemId); if (it && isLow(it)) toast(`${s.name} stays under "Running low" until you restock it`); }
+    mutate('removeFromShopping', id).catch(() => refresh().catch(() => {}));
+  }
+  else if (act === 'month') { S.month = shiftMonth(S.month, +v); render(); }
+  else if (act === 'pick-month') { S.month = v; render(); }
+  else if (act === 'edit-bill') openBill(id);
+  else if (act === 'new-bill') openBill('');
+  else if (act === 'quick-bill') openBill('', COMMON_BILLS[+v]);
+  else if (act === 'pay') openPay(id);
+  else if (act === 'log') openBuy({});
+  else if (act === 'del-purchase') {
+    if (!armed(el)) return;
+    S.purchases = S.purchases.filter(p => p.id !== id); render();
+    mutate('deletePurchase', id).then(() => toast('Purchase deleted')).catch(() => refresh().catch(() => {}));
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) flushQty();
+  else if (Date.now() - S.loadedAt > 60000) refresh().catch(() => {});
+});
+window.addEventListener('pagehide', flushQty);
+
+/* ---------- start ---------- */
+(async function boot() {
+  $('#demo').hidden = LIVE;
+  const cached = LIVE && store.get(CACHE_KEY);
+  if (cached) { apply(cached, true); $('#boot').remove(); }
+  try {
+    await refresh();
+    if ($('#boot')) $('#boot').remove();
+  } catch (e) {
+    if ($('#boot')) {
+      $('#boot-msg').innerHTML = 'Couldn\'t reach your Google Sheet.<br><button class="btn" style="margin-top:14px" onclick="location.reload()">Try again</button>';
+      $('#boot .ring').remove();
+    }
+  }
+})();
+</script>
+</body>
+</html>
