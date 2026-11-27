@@ -1,5 +1,5 @@
 /**
- * Home Inventory — the server that talks to your Google Sheet.
+ * Gooden's Home Inventory — the server that talks to your Google Sheet.
  *
  * The app page (index.html) is hosted on GitHub Pages and calls this script's
  * web app URL. Every request must carry a Google sign-in token for the Sheet's
@@ -87,9 +87,9 @@ function doPost(e) {
 
 /** Opening the script's own link just points people to the real app. */
 function doGet() {
-  const html = '<p style="font-family:Arial,sans-serif">This is the Home Inventory server. ' +
+  const html = '<p style="font-family:Arial,sans-serif">This is the Gooden\'s Home Inventory server. ' +
     'The app is at <a href="' + APP_URL + '" target="_top">' + APP_URL + '</a></p>';
-  return HtmlService.createHtmlOutput(html).setTitle('Home Inventory server');
+  return HtmlService.createHtmlOutput(html).setTitle("Gooden's Home Inventory server");
 }
 
 /** Checks a Google sign-in (ID) token and that its email is allowed. Returns the email. */
@@ -147,7 +147,7 @@ function showAppLink() {
     '<p style="' + style + ';word-break:break-all"><a href="' + APP_URL + '" target="_blank">' + APP_URL + '</a></p>' +
     '<p style="' + style + ';color:#666">On Android: open it in Chrome, tap ⋮ → Install app (or Add to Home screen).</p>';
   SpreadsheetApp.getUi().showModalDialog(
-    HtmlService.createHtmlOutput(html).setWidth(440).setHeight(200), 'Home Inventory');
+    HtmlService.createHtmlOutput(html).setWidth(440).setHeight(200), "Gooden's Home Inventory");
 }
 
 

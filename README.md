@@ -1,4 +1,6 @@
-# 🏠 Home Inventory
+# 🏠 Gooden's Home Inventory
+
+Made by Andrew Gooden, BSc.
 
 Keep track of what's in the house, let your shopping list build itself, tick off your monthly bills,
 and see where the money goes. Everything is saved in your own Google Sheet, with a colorful dashboard

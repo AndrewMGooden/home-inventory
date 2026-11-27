@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Home Inventory</title>
+<title>Gooden's Home Inventory</title>
 <meta name="theme-color" content="#2e6a4c">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -39,7 +39,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 
 header.top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
 header.top .wrap { display: flex; align-items: center; gap: 4px; height: 56px; }
-header.top h1 { font-size: 19px; margin: 0; flex: 1; font-weight: 700; letter-spacing: -.01em; }
+header.top h1 { font-size: 19px; margin: 0; flex: 1; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 0; background: transparent; display: grid; place-items: center; color: var(--muted); flex: none; }
 .icon-btn:hover { background: var(--surface-2); }
 .spin svg { animation: spin .9s linear infinite; }
@@ -176,7 +176,7 @@ dialog form { padding: 8px 16px calc(18px + env(safe-area-inset-bottom)); displa
 <div id="signin" hidden>
   <div class="card-in">
     <img src="icons/icon-192.png" alt="">
-    <h2>Home Inventory</h2>
+    <h2>Gooden's Home Inventory</h2>
     <p id="signin-msg"></p>
     <div id="gbtn"></div>
     <p style="font-size:13px">Only the Sheet's owner and people they add can get in.</p>
@@ -186,7 +186,7 @@ dialog form { padding: 8px 16px calc(18px + env(safe-area-inset-bottom)); displa
 <header class="top">
   <div class="demo" id="demo" hidden>Demo mode: sample data that stays in this browser and never touches your Sheet.</div>
   <div class="wrap">
-    <h1 id="title">Home Inventory</h1>
+    <h1 id="title">Gooden's Home Inventory</h1>
     <button class="icon-btn" id="sync" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
     <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>

@@ -1,6 +1,6 @@
 {
-  "name": "Home Inventory",
-  "short_name": "Inventory",
+  "name": "Gooden's Home Inventory",
+  "short_name": "Gooden's Home",
   "description": "What's in the house, what to buy, and where the money goes.",
   "start_url": "./",
   "scope": "./",
